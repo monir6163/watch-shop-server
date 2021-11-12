@@ -21,6 +21,7 @@ async function run() {
         const productsCollection = database.collection('products');
         const ordersCollection = database.collection('orders');
         const reviewsCollection = database.collection('reviews');
+        const usersCollection = database.collection('users');
         //product post api
         app.post('/products', async (req, res) => {
             const product = req.body;
@@ -82,7 +83,7 @@ async function run() {
             const result = await productsCollection.deleteOne(query);
             res.json(result);
         });
-        //status update api
+        //order status update api
         app.put('/placeorders/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) };
@@ -107,6 +108,67 @@ async function run() {
             const allReview = await cursor.toArray();
             res.json(allReview);
         });
+        // get admin
+        app.get("/users/:email", async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            let isAdmin = false;
+            if (user?.role === "admin") {
+                isAdmin = true;
+            }
+            res.json({ admin: isAdmin });
+        });
+
+        // save user in database
+        app.post("/users", async (req, res) => {
+            const users = req.body;
+            const result = await usersCollection.insertOne(users);
+            res.json(result);
+        });
+        // get all user
+        app.get('/users', async (req, res) => {
+            const cursor = usersCollection.find({});
+            const allUser = await cursor.toArray();
+            res.json(allUser);
+        });
+        // google user and upsert user 
+        app.put("/users", async (req, res) => {
+            const user = req.body;
+            const filter = { email: user.email };
+            const options = { upsert: true };
+            const updateUser = { $set: user };
+            const result = await usersCollection.updateOne(
+                filter,
+                updateUser,
+                options
+            );
+            res.json(result);
+        });
+        //make admin role
+        app.put('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const roleUpdate = {
+                $set: {
+                    role: 'admin'
+                }
+            };
+            const result = await usersCollection.updateOne(filter, roleUpdate, options);
+            res.json(result)
+        });
+        // check admin role 
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            let isAdmin = false;
+            if (user?.role === 'admin') {
+                isAdmin = true;
+            }
+            res.json({ admin: isAdmin })
+        })
 
     }
     finally {
