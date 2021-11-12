@@ -121,11 +121,11 @@ async function run() {
         });
 
         // save user in database
-        app.post("/users", async (req, res) => {
-            const users = req.body;
-            const result = await usersCollection.insertOne(users);
-            res.json(result);
-        });
+        // app.post("/users", async (req, res) => {
+        //     const users = req.body;
+        //     const result = await usersCollection.insertOne(users);
+        //     res.json(result);
+        // });
         // get all user
         app.get('/users', async (req, res) => {
             const cursor = usersCollection.find({});
@@ -133,18 +133,29 @@ async function run() {
             res.json(allUser);
         });
         // google user and upsert user 
+        // app.put("/users", async (req, res) => {
+        //     const user = req.body;
+        //     const filter = { email: user.email };
+        //     const options = { upsert: true };
+        //     const updateUser = { $set: user };
+        //     const result = await usersCollection.updateOne(
+        //         filter,
+        //         updateUser,
+        //         options
+        //     );
+        //     res.json(result);
+        // });
+        //put user to the db
         app.put("/users", async (req, res) => {
-            const user = req.body;
-            const filter = { email: user.email };
+            const userData = req.body;
+            const filter = { email: userData.email };
             const options = { upsert: true };
-            const updateUser = { $set: user };
-            const result = await usersCollection.updateOne(
-                filter,
-                updateUser,
-                options
-            );
-            res.json(result);
-        });
+            const updatedUser = {
+                $set: { ...userData }
+            }
+            const result = await usersCollection.updateOne(filter, updatedUser, options);
+            res.json(result)
+        })
         //make admin role
         app.put('/users/:id', async (req, res) => {
             const id = req.params.id;
